@@ -60,11 +60,6 @@ def suggest():
     pass
 
 
-def mix():
-    sp.shuffle(True)
-    print('mix')
-    pass
-
 def toPlaylist(arg):
     id = None
     for p in sp.current_user_playlists()['items']:
@@ -81,44 +76,74 @@ def toPlaylist(arg):
     print("add to playlist " + arg)
     pass
 
+
 def toQueue(arg):
     uri = sp.search(arg, type='track')['tracks']['items'][0]['uri']
     sp.add_to_queue(uri)
     print("add to queue " + arg)
     pass
 
+
 def removeFromPlaylist(arg):
+    id = None
+    for p in sp.current_user_playlists()['items']:
+        if p['name'] == arg:
+            id = p['id']
+
+    if id == None:
+        print("There's no such playlist")
+        return
+
+    curr = sp.current_playback()
+    song_id = curr['item']['id']
+    sp.playlist_remove_all_occurrences_of_items(id, song_id)
     print("remove from playlist " + arg)
     pass
+
 
 def removeFromQueue(arg):
     print("remove from queue " + arg)
     pass
 
-def lookFor(arg):
 
-    print("look for " + arg)
+def lookFor(arg):
+    names = [sp.search(arg, type='track')['tracks']['items'][i]['name'] for i in range(min(5,len(sp.search(arg, type='track')['tracks']['items'])))]
+    for t in names:
+        print(t)
+        TTS.say(t)
     pass
+
 
 def lookForBest(arg):
     print("look for best from " + arg)
     pass
 
+
 def createPlaylist(arg):
+    user_id = sp.me()['id']
+    sp.user_playlist_create(user_id, arg, public=True, collaborative=False, description='Nowa playlista')
     print("create playlist " + arg)
     pass
+
 
 def follow(arg):
     print("follow " + arg)
     pass
 
+
 def unfollow(arg):
+    sp.user_unfollow_artists(sp.current_playback()['item']['artists'][0]['id'])
     print("unfollow " + arg)
     pass
 
+
 def showDevices():
-    print("devices")
+    devices = [sp.devices()['devices'][i]['name'] for i in range(len(sp.devices()['devices']))]
+    for d in devices:
+        print(d)
+        TTS.say(d)
     pass
+
 
 def suggestArtists():
     print("podobni artysci")
@@ -133,7 +158,6 @@ to_func = {
     'author': author,
     'album': album,
     'suggest': suggest,
-    'mix': mix,
     "add to playlist": toPlaylist,
     "add to queue": toQueue,
     "remove from playlist": removeFromPlaylist,
@@ -187,6 +211,7 @@ def asystent(command):
     return "Już się robi szefie, zaraz wykonam " + command
 
 def main():
+    global TTS
     TTS = tts.init()
     TTS.setProperty('volume', 0.7)
     TTS.setProperty('rate', 190)
@@ -198,7 +223,7 @@ def main():
         tekst = input(">>")
         if len(tekst) > 0:
             odp = asystent(tekst)
-            TTS.say(odp)
+            # TTS.say(odp)
             TTS.runAndWait()
 
         else:
@@ -220,8 +245,7 @@ def main():
 
 if __name__ == '__main__':
     scope = ["user-read-playback-state", "user-modify-playback-state", "app-remote-control", "streaming"]
+    TTS = None
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_id=CLIENT_ID, client_secret=CLIENT_SECRET,redirect_uri=REDIRECT_URI))
-
-
 
     main()
