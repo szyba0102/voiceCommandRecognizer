@@ -132,7 +132,8 @@ def follow(arg):
 
 
 def unfollow(arg):
-    sp.user_unfollow_artists(sp.current_playback()['item']['artists'][0]['id'])
+    artist_id = sp.search(arg, type='artist')['artists']['items'][0]['id']
+    sp.user_unfollow_artists(id)
     print("unfollow " + arg)
     pass
 
@@ -146,7 +147,6 @@ def showDevices():
 
 
 def suggestArtists():
-    print("podobni artysci")
     pass
 
 
@@ -181,7 +181,7 @@ def parser(command):
         'album': 'album', 'jaki to album': 'album', 'podaj album': 'album', 'z jakiego album': 'album',
         'suggest': 'suggest', 'graj podobne utwory': 'suggest', 'zaproponuj piosenki': 'suggest', 'mixuj': 'suggest','mix': 'suggest','sugeruj':'suggest',
         'urządzenia': 'devices', 'jakie są dostępne urządzenia': 'devices','podaj moje urządzenia':'devices',
-        'zaproponuj podobnych artystów': "suggest artists", "kto ma podobne pioasenki": "suggest artists","podobni wykonawcy": "suggest artists","podobni": "suggest artists",
+        'zaproponuj podobnych artystów': "suggest artists", "kto ma podobne piosenki": "suggest artists","podobni wykonawcy": "suggest artists","podobni": "suggest artists",
     }
 
 
