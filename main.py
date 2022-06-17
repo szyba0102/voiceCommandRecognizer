@@ -7,11 +7,10 @@ import spotifyParser
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
-CLIENT_SECRET = '6c2fc5c27b0842af8fe97cc7ea26d944'
+CLIENT_SECRET = '4517b2f9a736477c990a456b89bc66a0'
 CLIENT_ID = '15dae62072ae4c4aae6c5bedc0e8f223'
-REDIRECT_URI = 'http://localhost:8080'
-# REDIRECT_URI = 'http://localhost'
-ME = '31qiybto2ysdm2nlzlutsdud4nuq'
+REDIRECT_URI = 'http://localhost:8888'
+
 
 BASE_PROB = 80
 UNRECOGNISED = 'unrecognised'
@@ -30,8 +29,8 @@ def start():
 
 
 def skip():
-    print('skip')
     sp.next_track()
+    print('skip')
     pass
 
 
@@ -62,17 +61,25 @@ def suggest():
 
 def toPlaylist(arg):
     id = None
-    for p in sp.current_user_playlists()['items']:
-        if p['name'] == arg:
-            id = p['id']
+    playlists = sp.current_user_playlists()
+    while playlists:
+        for i, playlist in enumerate(playlists['items']):
+            this_prob = fuzz.token_set_ratio(arg, playlist['name'])
+            if this_prob >= BASE_PROB:
+                id = playlist['id']
 
-    if id == None:
+        if playlists['next']:
+            playlists = sp.next(playlists)
+        else:
+            playlists = None
+
+    if id is None:
         print("There's no such playlist")
         return
 
     curr = sp.current_playback()
-    song_id = curr['item']['id']
-    sp.playlist_add_items(id, song_id, position=None)
+    song_id = [curr['item']['id']]
+    sp.playlist_add_items(id, song_id)
     print("add to playlist " + arg)
     pass
 
@@ -86,16 +93,24 @@ def toQueue(arg):
 
 def removeFromPlaylist(arg):
     id = None
-    for p in sp.current_user_playlists()['items']:
-        if p['name'] == arg:
-            id = p['id']
+    playlists = sp.current_user_playlists()
+    while playlists:
+        for i, playlist in enumerate(playlists['items']):
+            this_prob = fuzz.token_set_ratio(arg, playlist['name'])
+            if this_prob >= BASE_PROB:
+                id = playlist['id']
 
-    if id == None:
+        if playlists['next']:
+            playlists = sp.next(playlists)
+        else:
+            playlists = None
+
+    if id is None:
         print("There's no such playlist")
         return
 
     curr = sp.current_playback()
-    song_id = curr['item']['id']
+    song_id = [curr['item']['id']]
     sp.playlist_remove_all_occurrences_of_items(id, song_id)
     print("remove from playlist " + arg)
     pass
@@ -103,12 +118,14 @@ def removeFromPlaylist(arg):
 
 def removeFromQueue(arg):
     print("remove from queue " + arg)
+    print("in spotify you cannot remove from queue")
+    TTS.say("W Spotify niestety nie można usuwać z kolejki")
     pass
 
 
 def lookFor(arg):
     names = [sp.search(arg, type='track')['tracks']['items'][i]['name'] for i in range(min(5,len(sp.search(arg, type='track')['tracks']['items'])))]
-    for t in names:
+    for t in names[:4]:
         print(t)
         TTS.say(t)
     pass
@@ -116,7 +133,11 @@ def lookFor(arg):
 
 def lookForBest(arg):
     print("look for best from " + arg)
-    pass
+    id = sp.search(arg, type='artist')['artists']['items'][0]['id']
+    tops = sp.artist_top_tracks(id,'PL')['tracks']
+    for i in tops:
+        print(i['name'])
+        TTS.say(i['name'])
 
 
 def createPlaylist(arg):
@@ -127,12 +148,14 @@ def createPlaylist(arg):
 
 
 def follow(arg):
+    id = [sp.search(arg, type='artist')['artists']['items'][0]['id']]
+    sp.user_follow_artists(id)
     print("follow " + arg)
     pass
 
 
 def unfollow(arg):
-    artist_id = sp.search(arg, type='artist')['artists']['items'][0]['id']
+    id = [sp.search(arg, type='artist')['artists']['items'][0]['id']]
     sp.user_unfollow_artists(id)
     print("unfollow " + arg)
     pass
@@ -147,6 +170,12 @@ def showDevices():
 
 
 def suggestArtists():
+    curr = sp.current_playback()
+    artist_id = curr['item']['artists'][0]['id']
+    similar = sp.artist_related_artists(artist_id)
+    for i in similar['artists'][:5]:
+        print(i['name'])
+        TTS.say(i['name'])
     pass
 
 
@@ -208,7 +237,7 @@ def asystent(command):
             to_func[task](arg)
         else: print('Niestety nie znam odpowiedzi')
 
-    return "Już się robi szefie, zaraz wykonam " + command
+    return "Zaraz wykonam " + command
 
 def main():
     global TTS
@@ -244,7 +273,7 @@ def main():
 
 
 if __name__ == '__main__':
-    scope = ["user-read-playback-state", "user-modify-playback-state", "app-remote-control", "streaming"]
+    scope = ["user-read-playback-state", "user-modify-playback-state", "app-remote-control", "streaming","playlist-read-private","user-read-private","playlist-modify-private","playlist-modify-public","user-follow-modify"]
     TTS = None
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_id=CLIENT_ID, client_secret=CLIENT_SECRET,redirect_uri=REDIRECT_URI))
 

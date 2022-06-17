@@ -3,16 +3,16 @@ from spotipy.oauth2 import SpotifyOAuth
 
 CLIENT_SECRET = '6c2fc5c27b0842af8fe97cc7ea26d944'
 CLIENT_ID = '15dae62072ae4c4aae6c5bedc0e8f223'
-REDIRECT_URI = 'http://localhost:8080'
+REDIRECT_URI = 'http://localhost:8888'
 # REDIRECT_URI = 'http://localhost'
 ME = '31qiybto2ysdm2nlzlutsdud4nuq'
 FILIP = '214dqcdo3i2h54jy3mwvztriy'
 
-from spotipy.oauth2 import SpotifyClientCredentials
+# from spotipy.oauth2 import SpotifyClientCredentials
 
 # auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID,client_secret=CLIENT_SECRET)
 # sp = spotipy.Spotify(auth_manager=auth_manager)
-
+#
 # user = sp.user(FILIP)
 # print(user)
 # playlists = sp.user_playlists(FILIP)
@@ -36,12 +36,12 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope,client_id=CLIENT_ID,c
 
 # sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=CLIENT_ID,client_secret=CLIENT_SECRET,redirect_uri=REDIRECT_URI))
 #
-curr = sp.current_playback()
-#
-artist_id = curr['item']['artists'][0]['id']
-print(curr['item']['album']['name'])
-#
-print(sp.artist(artist_id)['name'])
+# curr = sp.current_playback()
+# #
+# artist_id = curr['item']['artists'][0]['id']
+# print(curr['item']['album']['name'])
+# #
+# print(sp.artist(artist_id)['name'])
 
 # sp.next_track()
 # print(sp.search("Sundress",type='track')['tracks']['items'])
@@ -61,4 +61,32 @@ arg = "H"
 # print(sp.current_user_playlists()['items'])
 
 curr = sp.current_playback()
-print(curr['item']['id'])
+# print(curr['item']['artists'][0]['id'])
+
+# names = [sp.search("Praise The Lord", type='track')['tracks']['items'][i]['name'] for i in range(min(5,len(sp.search("Praise The Lord", type='track')['tracks']['items'])))]
+# print(sp.me()['id'])
+
+# print([sp.devices()['devices'][i]['name'] for i in range(len(sp.devices()['devices']))])
+# print(sp.devices())
+
+# a = sp.search('ASAP Rocky', type='artist')
+# print(sp.search('ASAP Rocky', type='artist')['artists']['items'][0]['id'])
+
+# print(sp.me()['id'])
+# print(sp.current_user_playlists()['items'])
+
+# for p in sp.current_user_playlists(limit=3)['items']:
+#         print(p['id'])
+#         print(p['name'])
+
+# print(sp.search(arg, type='artist')['artists']['items'][0]['id'])
+# id = sp.search(arg, type='artist')['artists']['items'][0]['id']
+# tops = sp.artist_top_tracks(id,'PL')['tracks']
+# for i in tops:
+#     print(i['name'])
+
+curr = sp.current_playback()
+artist_id = curr['item']['artists'][0]['id']
+similar = sp.artist_related_artists(artist_id)
+for i in similar['artists']:
+    print(i['name'])

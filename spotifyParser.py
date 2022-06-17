@@ -46,10 +46,10 @@ def give_result(example):
             continue
         i += 1
 
-    if start_inx == -1:
-        name = "no name given"  # no key word
-        command = UNRECOGNISED
-        return command, name
+    # if start_inx == -1:
+    #     name = "no name given"  # no key word
+    #     command = UNRECOGNISED
+    #     return command, name
 
     # creating name of song / playlist / author
     if start_inx + 2 < len(sentence_words):
@@ -84,7 +84,7 @@ def give_result(example):
             command = "look for song"
     elif df.process.extract("najlepsze", sentence_words, limit=1)[0][1] >= 70:
         command = "look for best songs"
-    elif df.process.extract("stwórz", sentence_words, limit=1)[0][1] >= 70:
+    elif df.process.extract("stwórz", sentence_words, limit=1)[0][1] >= 70 or df.process.extract("utwórz", sentence_words, limit=1)[0][1] >= 70:
         if playlist != -1:
             command = "create playlist"
     elif df.process.extract("obserwuj", sentence_words, limit=1)[0][1] >= 60:
