@@ -10,9 +10,10 @@ UNRECOGNISED = 'unrecognised'
 
 def give_result(example):
     sentence_words = example.split(" ")  # podzielenie polecenia na pojedyncze słowa
-    if len(sentence_words) == 0:
-        print("Brak argumentów")
-        return
+    name = ""
+    command = UNRECOGNISED
+    if len(sentence_words) <= 1:
+        return command,name
 
     playlist = -1
     song = -1
@@ -20,8 +21,6 @@ def give_result(example):
     start_inx = -1
     i = 0
 
-    name = ""
-    command = UNRECOGNISED
     # szukanie słów które są kluczami i determinizują czego dotyczyć będzie polecenie. Słowami takimi
     # są piosenka, autor, utwór, składanka i inne.
     while i < len(sentence_words):
