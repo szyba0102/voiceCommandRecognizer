@@ -16,82 +16,69 @@ BASE_PROB = 80
 UNRECOGNISED = 'unrecognised'
 
 
-def stop():
+def stop(): # pauzowanie
     sp.pause_playback()
     print('stop')
-    pass
 
 
-def start():
+def start(): # odpauzowanie
     sp.start_playback()
     print('start')
-    pass
 
 
-def skip():
-    sp.next_track()
+def skip(): # przewinięcie
     print('skip')
-    pass
+    sp.next_track()
 
 
-def prev():
+def prev(): # powrót do poprzedniej piosenki
     sp.previous_track()
     print('prev')
-    pass
 
 
-def author():
+def author(): # podaje autora obecnie odtwarzanej piosenki
     curr = sp.current_playback()
     artist_id = curr['item']['artists'][0]['id']
     print(sp.artist(artist_id)['name'])
-    pass
+    TTS.say(sp.artist(artist_id)['name'])
 
 
-def album():
+def album(): # podaje album obecnie odtwarzanej piosenki
     curr = sp.current_playback()
     print(curr['item']['album']['name'])
-    pass
+    TTS.say(curr['item']['album']['name'])
 
 
-def suggest():
+def suggest(): # włącza tryb shuffle
     sp.shuffle(True)
-    print('suggest')
-    pass
+    print('mix')
 
 
-def toPlaylist(arg):
-    id = None
+def toPlaylist(arg): # dodaje obecnie odtwarzaną piosenke do podanej plalisty
+    playlist_id = None
     playlists = sp.current_user_playlists()
     while playlists:
         for i, playlist in enumerate(playlists['items']):
             this_prob = fuzz.token_set_ratio(arg, playlist['name'])
             if this_prob >= BASE_PROB:
-                id = playlist['id']
+                playlist_id = playlist['id']
 
         if playlists['next']:
             playlists = sp.next(playlists)
         else:
             playlists = None
 
-    if id is None:
+    if playlist_id is None:
         print("There's no such playlist")
         return
 
     curr = sp.current_playback()
     song_id = [curr['item']['id']]
-    sp.playlist_add_items(id, song_id)
+    sp.playlist_add_items(playlist_id, song_id)
     print("add to playlist " + arg)
-    pass
 
 
-def toQueue(arg):
-    uri = sp.search(arg, type='track')['tracks']['items'][0]['uri']
-    sp.add_to_queue(uri)
-    print("add to queue " + arg)
-    pass
-
-
-def removeFromPlaylist(arg):
+def removeFromPlaylist(arg): # usuwa obecnie odtwarzaną piosenke z podanej plalisty
     id = None
     playlists = sp.current_user_playlists()
     while playlists:
@@ -113,25 +100,23 @@ def removeFromPlaylist(arg):
     song_id = [curr['item']['id']]
     sp.playlist_remove_all_occurrences_of_items(id, song_id)
     print("remove from playlist " + arg)
-    pass
 
 
-def removeFromQueue(arg):
-    print("remove from queue " + arg)
-    print("in spotify you cannot remove from queue")
-    TTS.say("W Spotify niestety nie można usuwać z kolejki")
-    pass
-
-
-def lookFor(arg):
-    names = [sp.search(arg, type='track')['tracks']['items'][i]['name'] for i in range(min(5,len(sp.search(arg, type='track')['tracks']['items'])))]
-    for t in names[:4]:
+def lookFor(arg): # szuka piosenek o podanej nazwie
+    names = [sp.search(arg, type='track')['tracks']['items'][i]['name'] for i in
+             range(min(5, len(sp.search(arg, type='track')['tracks']['items'])))]
+    for t in names:
         print(t)
         TTS.say(t)
-    pass
 
 
-def lookForBest(arg):
+def toQueue(arg): # dodaje podaną piosenkę do kolejki
+    uri = sp.search(arg, type='track')['tracks']['items'][0]['uri']
+    sp.add_to_queue(uri)
+    print("add to queue " + arg)
+
+
+def lookForBest(arg): # wyszukuje najlepsze utwory podanego artysty
     print("look for best from " + arg)
     id = sp.search(arg, type='artist')['artists']['items'][0]['id']
     tops = sp.artist_top_tracks(id,'PL')['tracks']
@@ -140,45 +125,42 @@ def lookForBest(arg):
         TTS.say(i['name'])
 
 
-def createPlaylist(arg):
-    user_id = sp.me()['id']
-    sp.user_playlist_create(user_id, arg, public=True, collaborative=False, description='Nowa playlista')
-    print("create playlist " + arg)
-    pass
-
-
-def follow(arg):
-    id = [sp.search(arg, type='artist')['artists']['items'][0]['id']]
-    sp.user_follow_artists(id)
-    print("follow " + arg)
-    pass
-
-
-def unfollow(arg):
-    id = [sp.search(arg, type='artist')['artists']['items'][0]['id']]
-    sp.user_unfollow_artists(id)
-    print("unfollow " + arg)
-    pass
-
-
-def showDevices():
+def showDevices(): # wymienia aktualnie używane urządzenia
     devices = [sp.devices()['devices'][i]['name'] for i in range(len(sp.devices()['devices']))]
     for d in devices:
         print(d)
         TTS.say(d)
-    pass
 
 
-def suggestArtists():
+def createPlaylist(arg): # tworzy playlistę o podanej nazwie
+    user_id = sp.me()['id']
+    sp.user_playlist_create(user_id, arg, public=True, collaborative=False, description='Nowa playlista')
+    print("create playlist " + arg)
+
+
+def follow(arg): # ustawia obserwowanie podanego artysty
+    print("follow " + arg)
+    id = [sp.search(arg, type='artist')['artists']['items'][0]['id']]
+    sp.user_follow_artists(id)
+
+
+def unfollow(arg): # przestaje obserwowac podanego artystę
+    artist_id = [sp.search(arg, type='artist')['artists']['items'][0]['id']]
+    sp.user_unfollow_artists(artist_id)
+    print("unfollow " + arg)
+
+
+def suggestArtists(): # wymienia pięciu podobnych artystów, do autora obecnie odtwarzanej piosenki
     curr = sp.current_playback()
     artist_id = curr['item']['artists'][0]['id']
     similar = sp.artist_related_artists(artist_id)
+    print("podobni artysci: ")
     for i in similar['artists'][:5]:
         print(i['name'])
         TTS.say(i['name'])
-    pass
 
 
+# słownik przyporządkowujący komendzie odpowiednią funkcję
 to_func = {
     'stop': stop,
     'start': start,
@@ -190,7 +172,6 @@ to_func = {
     "add to playlist": toPlaylist,
     "add to queue": toQueue,
     "remove from playlist": removeFromPlaylist,
-    "remove from queue": removeFromQueue,
     "look for song": lookFor,
     "look for best songs": lookForBest,
     "create playlist": createPlaylist,
@@ -200,17 +181,21 @@ to_func = {
     "suggest artists": suggestArtists
 }
 
-def parser(command):
+def parser(command): # prosty parser dla wyrażeń bez zmiennych
     dict = {
         'zatrzymaj': 'stop', 'stop': 'stop', 'pauza': 'stop', 'pausa': 'stop',
         'start': 'start', 'graj': 'start', 'załącz muzyke': 'start', 'włącz muzyke': 'start',
-        'skip': 'skip', 'przewiń': 'skip', 'skipnij': 'skip', 'następna piosenka': 'skip', 'następny utwór': 'skip','puść następną': 'skip','następne': 'skip', 'następna': 'skip',
-        'prev': 'prev', 'poprzednia piosenka': 'prev', 'cofnij': 'prev', 'cofnij piosenkę': 'prev','cofnij utwór': 'prev',
-        'author': 'author', 'kto śpiewa': 'author', 'autor': 'author', 'wykonawca': 'author','podaj wykonawcę': 'author',
+        'skip': 'skip', 'przewiń': 'skip', 'skipnij': 'skip', 'następna piosenka': 'skip', 'następny utwór': 'skip',
+        'puść następną': 'skip', 'następne': 'skip', 'następna': 'skip',
+        'prev': 'prev', 'poprzednia piosenka': 'prev', 'cofnij': 'prev', 'cofnij piosenkę': 'prev',
+        'cofnij utwór': 'prev',
+        'author': 'author', 'kto śpiewa': 'author', 'podaj autora': 'author', 'autor': 'author', 'wykonawca': 'author',
+        'podaj wykonawcę': 'author',
         'album': 'album', 'jaki to album': 'album', 'podaj album': 'album', 'z jakiego album': 'album',
-        'suggest': 'suggest', 'graj podobne utwory': 'suggest', 'zaproponuj piosenki': 'suggest', 'mixuj': 'suggest','mix': 'suggest','sugeruj':'suggest',
-        'urządzenia': 'devices', 'jakie są dostępne urządzenia': 'devices','podaj moje urządzenia':'devices',
-        'zaproponuj podobnych artystów': "suggest artists", "kto ma podobne piosenki": "suggest artists","podobni wykonawcy": "suggest artists","podobni": "suggest artists",
+        'suggest': 'suggest artists', 'mixuj': 'suggest', 'mix': 'suggest', 'sugeruj': 'suggest artists',
+        'urządzenia': 'devices', 'jakie są dostępne urządzenia': 'devices', 'podaj moje urządzenia': 'devices',
+        'zaproponuj podobnych artystów': "suggest artists", "kto ma podobne piosenki": "suggest artists",
+        "podobni wykonawcy": "suggest artists", "podobni": "suggest artists",
     }
 
 
@@ -219,7 +204,7 @@ def parser(command):
 
     for key in dict:
         this_prob = fuzz.token_set_ratio(key, command)
-        if this_prob >= BASE_PROB:
+        if this_prob >= BASE_PROB: # jeśli prawdopodobieństwo że słowo jest daną komendą jest wyższe niż BASE_PROB, rozpatrujemy je
             if this_prob > prob:
                 prob = this_prob
                 which = key
@@ -227,14 +212,14 @@ def parser(command):
     if which != UNRECOGNISED: return dict[which]
     return UNRECOGNISED
 
-def asystent(command):
+def asystent(command): # sprawdzamy za pomocą obu parserów
     task = parser(command)
     if task != UNRECOGNISED:
         to_func[task]()
     else:
         task,arg = spotifyParser.give_result(command)
         if task != UNRECOGNISED:
-            to_func[task](arg)
+            to_func[task](arg) # przyporządkowujemy funkcję
         else: print('Niestety nie znam odpowiedzi')
 
     return "Zaraz wykonam " + command
@@ -248,11 +233,10 @@ def main():
     STT = sr.Recognizer()
 
     print('''Napisz pytanie i naciśnij Enter albo naciśnij Enter i zadaj pytanie.''')
-    while True:
+    while True: # pętla głowna rozpoznająca tekts lub mowę
         tekst = input(">>")
         if len(tekst) > 0:
-            odp = asystent(tekst)
-            # TTS.say(odp)
+            asystent(tekst)
             TTS.runAndWait()
 
         else:
@@ -275,6 +259,6 @@ def main():
 if __name__ == '__main__':
     scope = ["user-read-playback-state", "user-modify-playback-state", "app-remote-control", "streaming","playlist-read-private","user-read-private","playlist-modify-private","playlist-modify-public","user-follow-modify"]
     TTS = None
-    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_id=CLIENT_ID, client_secret=CLIENT_SECRET,redirect_uri=REDIRECT_URI))
+    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_id=CLIENT_ID, client_secret=CLIENT_SECRET,redirect_uri=REDIRECT_URI)) # autentykacja z serwerem
 
     main()
